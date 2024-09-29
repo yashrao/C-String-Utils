@@ -13,21 +13,22 @@ typedef struct {
     int length;
     int size;
     char* ptr;
-} String;
+} SU_String;
 
 
 static int su_calc_str_size(char* str);
-String su_create_string(char* str);
-void su_append_string(String* string, char* appendage);
-void su_free_string_ptr(String string);
-void su_cut_right(String* string, int cut_pos);
-String su_cut_right_copy(String string, int cut_pos);
-void su_cut_left(String* string, int cut_pos);
-String su_cut_left_copy(String string, int cut_pos);
-String su_copy_string(String string);
-String* su_split_string(String string, char c, int* num);
-bool su_check_eq(String string1, String string2);
-void su_trim(String* string);
+SU_String su_create_string(char* str);
+void su_append_cstring(SU_String* string, char* appendage);
+SU_String su_append_string(SU_String string1, SU_String string2);
+void su_free_string_ptr(SU_String string);
+void su_cut_right(SU_String* string, int cut_pos);
+SU_String su_cut_right_copy(SU_String string, int cut_pos);
+void su_cut_left(SU_String* string, int cut_pos);
+SU_String su_cut_left_copy(SU_String string, int cut_pos);
+SU_String su_copy_string(SU_String string);
+SU_String* su_split_string(SU_String string, char c, int* num);
+bool su_check_eq(SU_String string1, SU_String string2);
+void su_trim(SU_String* string);
 
 #endif //SU_H_
 
@@ -42,7 +43,7 @@ static int su_calc_str_size(char* str) {
     return size;
 }
 
-String su_create_string(char* str) {
+SU_String su_create_string(char* str) {
     int size = su_calc_str_size(str);
     int length = size - 1;
     char* ptr = calloc(size, sizeof(char));
@@ -51,11 +52,11 @@ String su_create_string(char* str) {
         ptr[i] = str[i];
     }
 
-    String ret = {length, size, ptr};
+    SU_String ret = {length, size, ptr};
     return ret;
 }
 
-void su_append_string(String* string, char* appendage) {
+void su_append_cstring(SU_String* string, char* appendage) {
     int appendage_size = su_calc_str_size(appendage);
     string->ptr = realloc(string->ptr, string->length + appendage_size);
     int new_length = string->length + appendage_size - 1;
@@ -67,17 +68,36 @@ void su_append_string(String* string, char* appendage) {
     string->size = new_length + 1;
 }
 
-void su_free_string_ptr(String string) { free(string.ptr); }
+SU_String su_append_string(SU_String string1, SU_String string2) {
+    SU_String ret;
+    ret.size = string1.length + string2.size;
+    ret.length = ret.size - 1;
+    bool swap = false;
+    ret.ptr = calloc(ret.size, sizeof(char));
+    for (int i = 0; i < ret.size; i++) {
+        if (i == (string1.length)) {
+            swap = true;
+        }
+        if (!swap) {
+            ret.ptr[i] = string1.ptr[i];
+        } else {
+            ret.ptr[i] = string2.ptr[i - string1.length];
+        }
+    }
+    return ret;
+}
 
-void su_cut_right(String* string, int cut_pos) {
+void su_free_string_ptr(SU_String string) { free(string.ptr); }
+
+void su_cut_right(SU_String* string, int cut_pos) {
     string->length = cut_pos;
     string->size = cut_pos + 1;
     string->ptr = realloc(string->ptr, sizeof(char) * string->size);
     string->ptr[string->length] = '\0';
 }
 
-String su_cut_right_copy(String string, int cut_pos) {
-    String ret;
+SU_String su_cut_right_copy(SU_String string, int cut_pos) {
+    SU_String ret;
     ret.length = cut_pos;
     ret.size = cut_pos + 1;
     ret.ptr = calloc(ret.size, sizeof(char));
@@ -89,7 +109,7 @@ String su_cut_right_copy(String string, int cut_pos) {
     return ret;
 }
 
-void su_cut_left(String* string, int cut_pos) {
+void su_cut_left(SU_String* string, int cut_pos) {
     string->length = string->length - cut_pos;
     int new_size = string->size - cut_pos;
     for (int i = cut_pos; i < string->size; i++) {
@@ -100,8 +120,8 @@ void su_cut_left(String* string, int cut_pos) {
     string->ptr[string->length] = '\0';
 }
 
-String su_cut_left_copy(String string, int cut_pos) {
-    String ret;
+SU_String su_cut_left_copy(SU_String string, int cut_pos) {
+    SU_String ret;
     ret.length = string.length - cut_pos;
     ret.size = string.size - cut_pos;
     ret.ptr = calloc(ret.size, sizeof(char));
@@ -112,8 +132,8 @@ String su_cut_left_copy(String string, int cut_pos) {
     return ret;
 }
 
-String su_copy_string(String string) {
-    String ret;
+SU_String su_copy_string(SU_String string) {
+    SU_String ret;
     ret.ptr = calloc(string.size, sizeof(char));
     ret.size = string.size;
     ret.length = string.length;
@@ -123,8 +143,8 @@ String su_copy_string(String string) {
     return ret;
 }
 
-String* su_split_string(String string, char c, int* num) {
-    String old_string = su_copy_string(string);
+SU_String* su_split_string(SU_String string, char c, int* num) {
+    SU_String old_string = su_copy_string(string);
     int num_items = 1;
     for (int i = 0; i < string.size; i++) {
         char current = string.ptr[i];
@@ -132,7 +152,7 @@ String* su_split_string(String string, char c, int* num) {
             num_items++;
         }
     }
-    String* ret = calloc(num_items, sizeof(String));
+    SU_String* ret = calloc(num_items, sizeof(SU_String));
     if (num_items == 1) {
         // return itself as an array
         ret[0] = string;
@@ -161,7 +181,7 @@ String* su_split_string(String string, char c, int* num) {
     return ret;
 }
 
-bool su_check_eq(String string1, String string2) {
+bool su_check_eq(SU_String string1, SU_String string2) {
     if (string1.length != string2.length) {
         return false;
     } else {
@@ -174,7 +194,7 @@ bool su_check_eq(String string1, String string2) {
     }
 }
 
-void su_trim(String* string) {
+void su_trim(SU_String* string) {
     // TODO: fix this function
     char whitespace[3] = {' ', '\n', '\t'};
     bool start = true;
