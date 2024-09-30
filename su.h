@@ -29,9 +29,11 @@ SU_String su_copy_string(SU_String string);
 SU_String* su_split_string(SU_String string, char c, int* num);
 bool su_check_eq(SU_String string1, SU_String string2);
 void su_trim(SU_String* string);
+SU_String su_create_slice(char* string, int start_pos, int end_pos);
 
 #endif //SU_H_
 
+#define SU_IMPLEMENTATION
 #ifdef SU_IMPLEMENTATION
 
 static int su_calc_str_size(char* str) {
@@ -46,7 +48,7 @@ static int su_calc_str_size(char* str) {
 SU_String su_create_string(char* str) {
     int size = su_calc_str_size(str);
     int length = size - 1;
-    char* ptr = calloc(size, sizeof(char));
+    char* ptr = (char*) calloc(size, sizeof(char));
 
     for (int i = 0; i < size; i++) {
         ptr[i] = str[i];
@@ -58,7 +60,7 @@ SU_String su_create_string(char* str) {
 
 void su_append_cstring(SU_String* string, char* appendage) {
     int appendage_size = su_calc_str_size(appendage);
-    string->ptr = realloc(string->ptr, string->length + appendage_size);
+    string->ptr = (char*) realloc(string->ptr, string->length + appendage_size);
     int new_length = string->length + appendage_size - 1;
     for (int i = string->length; i < new_length; i++) {
         string->ptr[i] = appendage[i - string->length];
@@ -73,7 +75,7 @@ SU_String su_append_string(SU_String string1, SU_String string2) {
     ret.size = string1.length + string2.size;
     ret.length = ret.size - 1;
     bool swap = false;
-    ret.ptr = calloc(ret.size, sizeof(char));
+    ret.ptr = (char*) calloc(ret.size, sizeof(char));
     for (int i = 0; i < ret.size; i++) {
         if (i == (string1.length)) {
             swap = true;
@@ -92,7 +94,7 @@ void su_free_string_ptr(SU_String string) { free(string.ptr); }
 void su_cut_right(SU_String* string, int cut_pos) {
     string->length = cut_pos;
     string->size = cut_pos + 1;
-    string->ptr = realloc(string->ptr, sizeof(char) * string->size);
+    string->ptr = (char*) realloc(string->ptr, sizeof(char) * string->size);
     string->ptr[string->length] = '\0';
 }
 
@@ -100,7 +102,7 @@ SU_String su_cut_right_copy(SU_String string, int cut_pos) {
     SU_String ret;
     ret.length = cut_pos;
     ret.size = cut_pos + 1;
-    ret.ptr = calloc(ret.size, sizeof(char));
+    ret.ptr = (char*) calloc(ret.size, sizeof(char));
     for (int i = 0; i < ret.length; i++) {
         ret.ptr[i] = string.ptr[i];
     }
@@ -115,7 +117,7 @@ void su_cut_left(SU_String* string, int cut_pos) {
     for (int i = cut_pos; i < string->size; i++) {
         string->ptr[i - cut_pos] = string->ptr[i];
     }
-    string->ptr = realloc(string->ptr, new_size);
+    string->ptr = (char*) realloc(string->ptr, new_size);
     string->size = new_size;
     string->ptr[string->length] = '\0';
 }
@@ -124,7 +126,7 @@ SU_String su_cut_left_copy(SU_String string, int cut_pos) {
     SU_String ret;
     ret.length = string.length - cut_pos;
     ret.size = string.size - cut_pos;
-    ret.ptr = calloc(ret.size, sizeof(char));
+    ret.ptr = (char*) calloc(ret.size, sizeof(char));
     for (int i = cut_pos; i < string.size; i++) {
         ret.ptr[i - cut_pos] = string.ptr[i];
     }
@@ -134,12 +136,26 @@ SU_String su_cut_left_copy(SU_String string, int cut_pos) {
 
 SU_String su_copy_string(SU_String string) {
     SU_String ret;
-    ret.ptr = calloc(string.size, sizeof(char));
+    ret.ptr = (char*) calloc(string.size, sizeof(char));
     ret.size = string.size;
     ret.length = string.length;
     for (int i = 0; i < string.length; i++) {
         ret.ptr[i] = string.ptr[i];
     }
+    return ret;
+}
+
+SU_String su_create_slice(char* string, int start_pos, int end_pos) {
+    SU_String ret;
+    int length = end_pos - start_pos;
+    int size = length;
+    ret.ptr = (char*) calloc(size, sizeof(char));
+    ret.ptr[size - 1] = '\0';
+
+    for (int i = start_pos; i < end_pos; i++) {
+        ret.ptr[i - start_pos] = string[i];
+    }
+    
     return ret;
 }
 
@@ -152,7 +168,7 @@ SU_String* su_split_string(SU_String string, char c, int* num) {
             num_items++;
         }
     }
-    SU_String* ret = calloc(num_items, sizeof(SU_String));
+    SU_String* ret = (SU_String*) calloc(num_items, sizeof(SU_String));
     if (num_items == 1) {
         // return itself as an array
         ret[0] = string;
