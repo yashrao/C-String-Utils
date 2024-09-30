@@ -33,7 +33,6 @@ SU_String su_create_slice(char* string, int start_pos, int end_pos);
 
 #endif //SU_H_
 
-#define SU_IMPLEMENTATION
 #ifdef SU_IMPLEMENTATION
 
 static int su_calc_str_size(char* str) {
